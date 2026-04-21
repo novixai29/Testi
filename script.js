@@ -1,7 +1,7 @@
-// Med Tutorial - Version 1.2 (Ultra Stable Build)
+// Med Tutorial - Emergency Stable Build
 const API_KEY = "AIzaSyCQRkTbqLQJ3dlJZstX3nka2msxODPXSzE";
 
-// تهيئة مكتبة قراءة الـ PDF
+// تهيئة مكتبة PDF
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
 window.saveUserData = function() {
@@ -26,10 +26,6 @@ if (localStorage.getItem('med_user_name')) {
     loadDashboard();
 }
 
-document.getElementById('theme-toggle').addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-});
-
 document.getElementById('file-input').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -49,27 +45,18 @@ document.getElementById('file-input').addEventListener('change', async (e) => {
         }
         await processWithAI(text, file.name);
     } catch (err) {
-        alert("خطأ في قراءة الملف: " + err.message);
+        alert("خطأ: " + err.message);
         stopLoading();
     }
 });
 
 async function processWithAI(lectureText, fileName) {
-    // استخدام الرابط المستقر gemini-pro (يعمل بنسبة 100% مع المفاتيح المجانية)
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
+    // استخدمنا الرابط العام للموديل الأكثر استقراراً لتجنب خطأ 404
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
 
     const requestBody = {
         contents: [{
-            parts: [{ text: `أنت طبيب وصديق مقرب لطالب طب، اشرح له المحاضرة التالية بأسلوب ودي وسلس ومفصل جداً.
-                الهيكل المطلوب:
-                [EXPLANATION]
-                (تذكير بالمحاضرة السابقة، الحالة الطبيعية للجسم، شرح تفصيلي فقرة بفقرة، الأدوية بأسماء تجارية، الفحوصات الطبية).
-                [TERMS]
-                (المصطلحات الصعبة ومعانيها).
-                [MCQ]
-                (5 أسئلة Case Scenarios صعبة).
-                
-                نص المحاضرة: ${lectureText}` }]
+            parts: [{ text: `أنت طبيب وصديق مقرب لطالب طب، اشرح له المحاضرة التالية بأسلوب ودي ومفصل. قسم الإجابة بوضوح باستخدام [EXPLANATION] و [TERMS] و [MCQ]. النص: ${lectureText}` }]
         }]
     };
 
@@ -83,11 +70,7 @@ async function processWithAI(lectureText, fileName) {
         const data = await response.json();
 
         if (data.error) {
-            throw new Error(`جوجل تقول: ${data.error.message} (كود ${data.error.code})`);
-        }
-
-        if (!data.candidates || data.candidates.length === 0) {
-            throw new Error("لم يتم توليد رد. قد يكون المحتوى الطبي حساساً جداً لفلاتر الأمان.");
+            throw new Error(`جوجل تقول: ${data.error.message}`);
         }
 
         const fullOutput = data.candidates[0].content.parts[0].text;
@@ -95,7 +78,6 @@ async function processWithAI(lectureText, fileName) {
         saveToHistory(fileName, fullOutput);
 
     } catch (error) {
-        console.error(error);
         alert("فشل الاتصال: " + error.message); 
     } finally {
         stopLoading();
@@ -110,17 +92,16 @@ function displayResults(output, fileName) {
     document.getElementById('explanation-tab').innerHTML = `<div class="section-block block-content"><h3>شرح: ${fileName}</h3>${formatText(exp)}</div>`;
     document.getElementById('terms-tab').innerHTML = `<div class="section-block block-reminder">${formatText(trm)}</div>`;
     document.getElementById('mcq-tab').innerHTML = `<div class="section-block block-normal">${formatText(mcq)}</div>`;
-    window.scrollTo({ top: document.getElementById('lecture-content').offsetTop, behavior: 'smooth' });
 }
 
 function formatText(text) {
-    return text.trim().replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong class="bold-text">$1</strong>');
+    return text.trim().replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 }
 
 function startLoading() {
     document.getElementById('loading-screen').classList.remove('hidden');
     window.dhikrTimer = setInterval(() => { 
-        document.getElementById('dhikr-text').innerText = "المسألة ما تطول، اذكر الله علما نكمل..."; 
+        document.getElementById('dhikr-text').innerText = "اذكر الله علما نكمل..."; 
     }, 3000);
 }
 
@@ -132,17 +113,5 @@ function stopLoading() {
 function updateHistoryList() {
     const list = document.getElementById('lecture-history');
     let history = JSON.parse(localStorage.getItem('med_history') || "[]");
-    list.innerHTML = history.map((item, index) => `<li onclick="loadFromHistory(${index})"><strong>${item.name}</strong></li>`).reverse().join('');
+    list.innerHTML = history.map((item, index) => `<li onclick="loadFromHistory(${index})">${item.name}</li>`).reverse().join('');
 }
-
-window.loadFromHistory = function(index) {
-    let history = JSON.parse(localStorage.getItem('med_history'));
-    displayResults(history[index].data, history[index].name);
-};
-
-window.showTab = function(tabName) {
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(tabName + '-tab').classList.remove('hidden');
-    event.currentTarget.classList.add('active');
-};
