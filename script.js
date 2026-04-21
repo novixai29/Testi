@@ -1,6 +1,6 @@
 // استبدل أول جزء من الكود بهذا:
 
-const API_KEY = "ضع_المفتاح_هنا";
+const API_KEY = "AIzaSyCQRkTbqLQJ3dlJZstX3nka2msxODPXSzE";
 
 async function processWithAI(lectureText, fileName) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
