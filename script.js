@@ -1,18 +1,49 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// استبدل أول جزء من الكود بهذا:
 
-// ---------------------------------------------------------
-// ⚠️ ضع مفتاح الـ API الخاص بك بين القوسين أدناه
-const API_KEY = "AIzaSyCG4a0pNIiTNlPedXWD2uoosjpPgrlY-fA"; 
-// ---------------------------------------------------------
+const API_KEY = "ضع_المفتاح_هنا";
 
-const genAI = new GoogleGenerativeAI(API_KEY);
+async function processWithAI(lectureText, fileName) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-// تهيئة مكتبة معالجة الـ PDF
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    const requestBody = {
+        contents: [{
+            parts: [{
+                text: `أنت طبيب وصديق مقرب لطالب طب، اشرح له المحاضرة التالية بأسلوب ودي وسلس.
+                الهيكل المطلوب:
+                1. [EXPLANATION]: ابدأ بفقرة تذكير (5-10 أسطر) بالمحاضرة السابقة. ثم فقرة الحالة الطبيعية للجسم. ثم شرح تفصيلي فقرة بفقرة مع الأدوية والفحوصات.
+                2. [TERMS]: المصطلحات الطبية الصعبة.
+                3. [MCQ]: 5 أسئلة Case Scenarios صعبة جداً.
+                
+                نص المحاضرة: ${lectureText}`
+            }]
+        }]
+    };
 
-// حفظ بيانات المستخدم (الاسم والكلية)
-window.saveUserData = function() {
-    const name = document.getElementById('user-name').value;
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
+
+        const fullOutput = data.candidates[0].content.parts[0].text;
+        displayResults(fullOutput, fileName);
+        saveToHistory(fileName, fullOutput);
+
+    } catch (error) {
+        console.error("AI Error:", error);
+        alert("حدث خطأ: " + error.message); // هنا سيخبرك الموقع بالسبب الحقيقي للخطأ
+    } finally {
+        stopLoading();
+    }
+}
+
     const college = document.getElementById('user-college').value;
     if (name && college) {
         localStorage.setItem('med_user_name', name);
