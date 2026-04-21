@@ -1,5 +1,5 @@
-// Med Tutorial - Final Fix (Model Name & Version)
-const API_KEY = "AIzaSyCQRkTbqLQJ3dlJZstX3nka2msxODPXSzE";
+// Med Tutorial - Version 1.1 (Stable Model Path)
+const API_KEY = "ضع_المفتاح_هنا";
 
 // تهيئة مكتبة PDF
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
@@ -55,8 +55,8 @@ document.getElementById('file-input').addEventListener('change', async (e) => {
 });
 
 async function processWithAI(lectureText, fileName) {
-    // التعديل هنا: استخدام v1 بدلاً من v1beta وتصحيح مسار الموديل
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    // التعديل الجذري: استخدام الموديل gemini-pro كبديل مستقر جداً أو محاولة المسار الكامل لـ flash
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
 
     const requestBody = {
         contents: [{
@@ -83,11 +83,8 @@ async function processWithAI(lectureText, fileName) {
         const data = await response.json();
 
         if (data.error) {
-            throw new Error(`خطأ من جوجل: ${data.error.message}`);
-        }
-
-        if (!data.candidates || data.candidates.length === 0) {
-            throw new Error("لم يقم الذكاء الاصطناعي بتوليد استجابة، ربما بسبب قيود المحتوى.");
+            // إذا استمر الخطأ 404، سنعرف من الرسالة الجديدة
+            throw new Error(`خطأ من جوجل: ${data.error.message} (كود: ${data.error.code})`);
         }
 
         const fullOutput = data.candidates[0].content.parts[0].text;
@@ -96,7 +93,7 @@ async function processWithAI(lectureText, fileName) {
 
     } catch (error) {
         console.error(error);
-        alert(error.message); 
+        alert("تنبيه: " + error.message); 
     } finally {
         stopLoading();
     }
@@ -104,16 +101,12 @@ async function processWithAI(lectureText, fileName) {
 
 function displayResults(output, fileName) {
     document.getElementById('lecture-content').classList.remove('hidden');
-    
-    // تقسيم النصوص بناءً على التاجات
     const exp = output.split('[EXPLANATION]')[1]?.split('[TERMS]')[0] || output;
     const trm = output.split('[TERMS]')[1]?.split('[MCQ]')[0] || "لا يوجد";
     const mcq = output.split('[MCQ]')[1] || "لا يوجد";
-
     document.getElementById('explanation-tab').innerHTML = `<div class="section-block block-content"><h3>شرح: ${fileName}</h3>${formatText(exp)}</div>`;
     document.getElementById('terms-tab').innerHTML = `<div class="section-block block-reminder">${formatText(trm)}</div>`;
     document.getElementById('mcq-tab').innerHTML = `<div class="section-block block-normal">${formatText(mcq)}</div>`;
-    
     window.scrollTo({ top: document.getElementById('lecture-content').offsetTop, behavior: 'smooth' });
 }
 
