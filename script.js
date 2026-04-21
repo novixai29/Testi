@@ -1,5 +1,5 @@
 // Med Tutorial - Version 1.1 (Stable Model Path)
-const API_KEY = "ضع_المفتاح_هنا";
+const API_KEY = "AIzaSyCQRkTbqLQJ3dlJZstX3nka2msxODPXSzE";
 
 // تهيئة مكتبة PDF
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
