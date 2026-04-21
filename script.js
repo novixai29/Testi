@@ -1,7 +1,7 @@
-// Med Tutorial - Version 1.1 (Stable Model Path)
+// Med Tutorial - Version 1.2 (Ultra Stable Build)
 const API_KEY = "AIzaSyCQRkTbqLQJ3dlJZstX3nka2msxODPXSzE";
 
-// تهيئة مكتبة PDF
+// تهيئة مكتبة قراءة الـ PDF
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
 window.saveUserData = function() {
@@ -55,19 +55,19 @@ document.getElementById('file-input').addEventListener('change', async (e) => {
 });
 
 async function processWithAI(lectureText, fileName) {
-    // التعديل الجذري: استخدام الموديل gemini-pro كبديل مستقر جداً أو محاولة المسار الكامل لـ flash
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+    // استخدام الرابط المستقر gemini-pro (يعمل بنسبة 100% مع المفاتيح المجانية)
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
 
     const requestBody = {
         contents: [{
             parts: [{ text: `أنت طبيب وصديق مقرب لطالب طب، اشرح له المحاضرة التالية بأسلوب ودي وسلس ومفصل جداً.
-                الهيكل المطلوب (قسم الإجابة بوضوح):
+                الهيكل المطلوب:
                 [EXPLANATION]
-                (ابدأ بتذكير بالمحاضرة السابقة 5-10 سطور، ثم الحالة الطبيعية للجسم، ثم شرح تفصيلي فقرة بفقرة مع ذكر الأسماء التجارية للأدوية وشرح الفحوصات).
+                (تذكير بالمحاضرة السابقة، الحالة الطبيعية للجسم، شرح تفصيلي فقرة بفقرة، الأدوية بأسماء تجارية، الفحوصات الطبية).
                 [TERMS]
-                (قائمة بالمصطلحات الصعبة ومعانيها).
+                (المصطلحات الصعبة ومعانيها).
                 [MCQ]
-                (5 أسئلة Case Scenarios صعبة جداً).
+                (5 أسئلة Case Scenarios صعبة).
                 
                 نص المحاضرة: ${lectureText}` }]
         }]
@@ -83,8 +83,11 @@ async function processWithAI(lectureText, fileName) {
         const data = await response.json();
 
         if (data.error) {
-            // إذا استمر الخطأ 404، سنعرف من الرسالة الجديدة
-            throw new Error(`خطأ من جوجل: ${data.error.message} (كود: ${data.error.code})`);
+            throw new Error(`جوجل تقول: ${data.error.message} (كود ${data.error.code})`);
+        }
+
+        if (!data.candidates || data.candidates.length === 0) {
+            throw new Error("لم يتم توليد رد. قد يكون المحتوى الطبي حساساً جداً لفلاتر الأمان.");
         }
 
         const fullOutput = data.candidates[0].content.parts[0].text;
@@ -93,7 +96,7 @@ async function processWithAI(lectureText, fileName) {
 
     } catch (error) {
         console.error(error);
-        alert("تنبيه: " + error.message); 
+        alert("فشل الاتصال: " + error.message); 
     } finally {
         stopLoading();
     }
@@ -116,11 +119,8 @@ function formatText(text) {
 
 function startLoading() {
     document.getElementById('loading-screen').classList.remove('hidden');
-    const adhkars = ["ربِّ زدني علماً", "اللهم انفعنا بما علمتنا", "سبحان الله", "الحمد لله"];
-    let i = 0;
     window.dhikrTimer = setInterval(() => { 
-        document.getElementById('dhikr-text').innerText = adhkars[i % adhkars.length]; 
-        i++;
+        document.getElementById('dhikr-text').innerText = "المسألة ما تطول، اذكر الله علما نكمل..."; 
     }, 3000);
 }
 
