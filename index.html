@@ -1,83 +1,74 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Med Tutorial | شرح طبي ذكي</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <script type="importmap">
-    {
-        "imports": {
-            "@google/generative-ai": "https://esm.run/@google/generative-ai"
-        }
-    }
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Med Tutorial</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="light-mode">
 
-    <div id="welcome-overlay" class="overlay">
-        <div class="modal">
-            <h2>مرحباً بك في Med Tutorial</h2>
-            <p>السلام عليكم، هذا الموقع مجاني كصدقة جارية لأرواح أموات المسلمين جميعاً.</p>
-            <input type="text" id="user-name" placeholder="أدخل اسمك الكامل">
-            <input type="text" id="user-college" placeholder="اسم كليتك">
-            <button onclick="saveUserData()">ابدأ التعلم الآن</button>
-        </div>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <h1>Med Tutorial</h1>
+    <button onclick="toggleMode()" id="modeBtn">🌙</button>
+  </header>
+
+  <!-- Welcome -->
+  <div class="welcome">
+    السلام عليكم، هذا الموقع مجاني كصدقة جارية لأرواح اموات المسلمين جميعاً
+  </div>
+
+  <!-- Student Info -->
+  <div id="studentBox" class="card">
+    <h2>أدخل بياناتك</h2>
+    <input id="name" placeholder="اسم الطالب">
+    <input id="college" placeholder="اسم الكلية">
+    <button onclick="saveStudent()">دخول</button>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" style="display:none;">
+
+    <!-- Upload Lecture -->
+    <div class="card">
+      <h2>رفع المحاضرة</h2>
+      <input type="file" id="fileInput">
+      <button onclick="uploadLecture()">رفع وشرح</button>
     </div>
 
-    <header>
-        <div class="container">
-            <h1>Med Tutorial</h1>
-            <button id="theme-toggle">🌙 المود الليلي</button>
-        </div>
-    </header>
+    <!-- Processing -->
+    <div id="loading" class="loading">
+      <p>المسألة ما تطول، اذكر الله علما نكمل</p>
+      <div class="zekr">
+        <p>📿 العلم نور، ومن طلب العلم رفعه الله</p>
+        <p>📿 اللهم زدنا علماً نافعاً</p>
+        <p>📿 العلم حياة القلوب</p>
+      </div>
+    </div>
 
-    <main class="container">
-        <section class="user-info-bar">
-            أهلاً يا دكتور/ <span id="display-name">...</span> - <span id="display-college">...</span>
-        </section>
+    <!-- Lecture Output -->
+    <div id="output" class="card"></div>
 
-        <section class="upload-area">
-            <div class="drop-zone" id="drop-zone">
-                <span class="icon">📄</span>
-                <h3>ارفع محاضرتك هنا</h3>
-                <p>ارفع ملف PDF ليقوم الصديق الذكي بشرحه لك</p>
-                <input type="file" id="file-input" accept=".pdf,.txt" hidden>
-                <button onclick="document.getElementById('file-input').click()">اختيار ملف المحاضرة</button>
-            </div>
-        </section>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button onclick="showTab('terms')">المصطلحات</button>
+      <button onclick="showTab('quiz')">الاختبارات</button>
+      <button onclick="showTab('history')">السجل</button>
+    </div>
 
-        <div id="loading-screen" class="hidden">
-            <div class="loader-content">
-                <div class="spinner"></div>
-                <p>المسألة ما تطول، اذكر الله علما نكمل</p>
-                <small id="dhikr-text">"ربِّ زدني علماً"</small>
-            </div>
-        </div>
+    <div id="terms" class="card tab"></div>
+    <div id="quiz" class="card tab"></div>
+    <div id="history" class="card tab"></div>
 
-        <div class="main-grid">
-            <aside class="history-sidebar">
-                <h3>سجل المحاضرات</h3>
-                <ul id="lecture-history"></ul>
-            </aside>
+  </div>
 
-            <article class="content-area hidden" id="lecture-content">
-                <div class="tabs">
-                    <button class="tab-btn active" onclick="showTab('explanation')">الشرح المفصل</button>
-                    <button class="tab-btn" onclick="showTab('terms')">المصطلحات الصعبة</button>
-                    <button class="tab-btn" onclick="showTab('mcq')">اختبار (MCQ)</button>
-                </div>
+</div>
 
-                <div id="explanation-tab" class="tab-content"></div>
-                <div id="terms-tab" class="tab-content hidden"></div>
-                <div id="mcq-tab" class="tab-content hidden"></div>
-            </article>
-        </div>
-    </main>
-
-    <script type="module" src="med_v1.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
