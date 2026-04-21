@@ -1,4 +1,4 @@
-// Med Tutorial - Final Stable Version
+// Med Tutorial - Final Fix (Model Name & Version)
 const API_KEY = "AIzaSyCQRkTbqLQJ3dlJZstX3nka2msxODPXSzE";
 
 // تهيئة مكتبة PDF
@@ -55,20 +55,22 @@ document.getElementById('file-input').addEventListener('change', async (e) => {
 });
 
 async function processWithAI(lectureText, fileName) {
-    // الرابط المباشر لـ Gemini API
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    // التعديل هنا: استخدام v1 بدلاً من v1beta وتصحيح مسار الموديل
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
     const requestBody = {
         contents: [{
-            parts: [{ text: `اشرح هذه المحاضرة الطبية بأسلوب صديق يشرح لصديقه، مع تقسيم الرد إلى [EXPLANATION] و [TERMS] و [MCQ]. النص: ${lectureText}` }]
-        }],
-        // تعطيل فلاتر الأمان لضمان عدم حظر المصطلحات الطبية
-        safetySettings: [
-            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-        ]
+            parts: [{ text: `أنت طبيب وصديق مقرب لطالب طب، اشرح له المحاضرة التالية بأسلوب ودي وسلس ومفصل جداً.
+                الهيكل المطلوب (قسم الإجابة بوضوح):
+                [EXPLANATION]
+                (ابدأ بتذكير بالمحاضرة السابقة 5-10 سطور، ثم الحالة الطبيعية للجسم، ثم شرح تفصيلي فقرة بفقرة مع ذكر الأسماء التجارية للأدوية وشرح الفحوصات).
+                [TERMS]
+                (قائمة بالمصطلحات الصعبة ومعانيها).
+                [MCQ]
+                (5 أسئلة Case Scenarios صعبة جداً).
+                
+                نص المحاضرة: ${lectureText}` }]
+        }]
     };
 
     try {
@@ -81,8 +83,11 @@ async function processWithAI(lectureText, fileName) {
         const data = await response.json();
 
         if (data.error) {
-            // سيعطيك الموقع الآن رسالة واضحة جداً عن سبب المشكلة
-            throw new Error(`خطأ من جوجل: ${data.error.message} (كود: ${data.error.code})`);
+            throw new Error(`خطأ من جوجل: ${data.error.message}`);
+        }
+
+        if (!data.candidates || data.candidates.length === 0) {
+            throw new Error("لم يقم الذكاء الاصطناعي بتوليد استجابة، ربما بسبب قيود المحتوى.");
         }
 
         const fullOutput = data.candidates[0].content.parts[0].text;
@@ -97,13 +102,19 @@ async function processWithAI(lectureText, fileName) {
     }
 }
 
-// الدوال المساعدة (نفسها كما في السابق)
 function displayResults(output, fileName) {
     document.getElementById('lecture-content').classList.remove('hidden');
-    const parts = output.split(/\[EXPLANATION\]|\[TERMS\]|\[MCQ\]/);
-    document.getElementById('explanation-tab').innerHTML = `<div class="section-block block-content"><h3>شرح: ${fileName}</h3>${formatText(parts[1] || output)}</div>`;
-    document.getElementById('terms-tab').innerHTML = formatText(parts[2] || "");
-    document.getElementById('mcq-tab').innerHTML = formatText(parts[3] || "");
+    
+    // تقسيم النصوص بناءً على التاجات
+    const exp = output.split('[EXPLANATION]')[1]?.split('[TERMS]')[0] || output;
+    const trm = output.split('[TERMS]')[1]?.split('[MCQ]')[0] || "لا يوجد";
+    const mcq = output.split('[MCQ]')[1] || "لا يوجد";
+
+    document.getElementById('explanation-tab').innerHTML = `<div class="section-block block-content"><h3>شرح: ${fileName}</h3>${formatText(exp)}</div>`;
+    document.getElementById('terms-tab').innerHTML = `<div class="section-block block-reminder">${formatText(trm)}</div>`;
+    document.getElementById('mcq-tab').innerHTML = `<div class="section-block block-normal">${formatText(mcq)}</div>`;
+    
+    window.scrollTo({ top: document.getElementById('lecture-content').offsetTop, behavior: 'smooth' });
 }
 
 function formatText(text) {
@@ -112,7 +123,12 @@ function formatText(text) {
 
 function startLoading() {
     document.getElementById('loading-screen').classList.remove('hidden');
-    window.dhikrTimer = setInterval(() => { document.getElementById('dhikr-text').innerText = "اذكر الله علما نكمل..."; }, 3000);
+    const adhkars = ["ربِّ زدني علماً", "اللهم انفعنا بما علمتنا", "سبحان الله", "الحمد لله"];
+    let i = 0;
+    window.dhikrTimer = setInterval(() => { 
+        document.getElementById('dhikr-text').innerText = adhkars[i % adhkars.length]; 
+        i++;
+    }, 3000);
 }
 
 function stopLoading() {
@@ -123,5 +139,17 @@ function stopLoading() {
 function updateHistoryList() {
     const list = document.getElementById('lecture-history');
     let history = JSON.parse(localStorage.getItem('med_history') || "[]");
-    list.innerHTML = history.map((item, index) => `<li onclick="loadFromHistory(${index})">${item.name}</li>`).reverse().join('');
+    list.innerHTML = history.map((item, index) => `<li onclick="loadFromHistory(${index})"><strong>${item.name}</strong></li>`).reverse().join('');
 }
+
+window.loadFromHistory = function(index) {
+    let history = JSON.parse(localStorage.getItem('med_history'));
+    displayResults(history[index].data, history[index].name);
+};
+
+window.showTab = function(tabName) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabName + '-tab').classList.remove('hidden');
+    event.currentTarget.classList.add('active');
+};
